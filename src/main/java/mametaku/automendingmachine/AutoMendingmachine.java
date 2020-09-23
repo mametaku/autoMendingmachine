@@ -59,8 +59,6 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
 
     //GUIを開かせる
     public void openGUI(Player player) {
-        Inventory amount = player.getInventory();
-        Player p = player;
         Inventory inv = Bukkit.createInventory(null, 9, "EXPtank");
         FileConfiguration config = getConfig();
         if (!config.getBoolean("mode")) {
