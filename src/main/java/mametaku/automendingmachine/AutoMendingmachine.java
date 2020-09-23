@@ -65,6 +65,11 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
             getLogger().info("autoexpmachine not run.");
             return;
         }
+            Integer amount = 0;
+        for(int i=0; i<inv.getSize(); i++){
+            ItemStack item = new ItemStack(Material.EXPERIENCE_BOTTLE, amount / 64);
+            player.getInventory().addItem(item);
+        }
         player.openInventory(inv);
     }
 
