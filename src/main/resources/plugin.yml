@@ -1,0 +1,4 @@
+name: AutoMendingmachine
+version: ${project.version}
+main: mametaku.automendingmachine.AutoMendingmachine
+api-version: 1.16
