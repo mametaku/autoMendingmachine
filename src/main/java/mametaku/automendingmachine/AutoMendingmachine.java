@@ -3,19 +3,25 @@ package mametaku.automendingmachine;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.HashMap;
+import java.util.Map;
 
 
 public final class AutoMendingmachine extends JavaPlugin implements Listener {
+
+    Map itemAmount = new HashMap<Player, Integer>();//GUIにいれたアイテム数をプレイヤーごとに管理する
 
     @Override
     public void onEnable() {
@@ -53,7 +59,9 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
 
     //GUIを開かせる
     public void openGUI(Player player) {
-        Inventory inv = Bukkit.createInventory(null, 27, "EXPtank");
+        Inventory amount = player.getInventory();
+        Player p = player;
+        Inventory inv = Bukkit.createInventory(null, 9, "EXPtank");
         FileConfiguration config = getConfig();
         if (!config.getBoolean("mode")) {
             getLogger().info("autoexpmachine not run.");
@@ -72,12 +80,29 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
             return;
         }
         if (event.getCurrentItem() == null || event.getCurrentItem().getType() != Material.EXPERIENCE_BOTTLE) {
-            if ("EXPtank" == q) {
-                event.setCancelled(true);
+            if ("EXPtank".equals(q)) {
                 if (event.getCurrentItem() != null){
                     p.sendMessage("入れられるのは経験値瓶のみです！");
+                    event.setCancelled(true);
                 }
             }
+        }
+    }
+
+    @EventHandler
+    public void closeGUI(InventoryCloseEvent event){
+        Player p = (Player) event.getPlayer();
+        Inventory inv = event.getInventory();
+        if(event.getView().getTitle() == "EXPtank" ){
+            Integer amount = 0;
+            for(int i=0; i<inv.getSize(); i++){
+                if (inv.getItem(i) != null ){
+                    if(inv.getItem(i).getType() == Material.EXPERIENCE_BOTTLE){
+                        amount += inv.getItem(i).getAmount();
+                    }
+                }
+            }
+            itemAmount.put(p,amount);
         }
     }
 }
