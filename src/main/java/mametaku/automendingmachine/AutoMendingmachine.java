@@ -100,6 +100,9 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
                     }
                 }
             }
+            if(amount > 0){
+                p.sendMessage(amount+"個入れました");
+            }
             itemAmount.put(p,amount);
         }
     }
