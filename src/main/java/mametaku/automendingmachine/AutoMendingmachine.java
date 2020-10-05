@@ -15,6 +15,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.awt.image.ImageProducer;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -45,7 +46,7 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
         ItemStack item = event.getItem();
         FileConfiguration config = getConfig();
         if (!config.getBoolean("mode")) {
-            getLogger().info("autoexpmachine not run.");
+            getLogger().info("autoexpmachine is not run.");
             return;
         }
         if (action.equals(Action.RIGHT_CLICK_AIR) || action.equals(Action.RIGHT_CLICK_BLOCK)) {
@@ -65,12 +66,16 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
             getLogger().info("autoexpmachine not run.");
             return;
         }
-            Integer amount = 0;
-        for(int i=0; i<inv.getSize(); i++){
-            ItemStack item = new ItemStack(Material.EXPERIENCE_BOTTLE, amount / 64);
+        player.openInventory(inv);
+        Integer amount = (Integer) itemAmount.get(player);
+        while (amount / 64 != 0){
+            if (amount < 64){
+                ItemStack item = new ItemStack(Material.EXPERIENCE_BOTTLE, amount % 64);
+                player.getInventory().addItem(item);
+            }
+            ItemStack item = new ItemStack(Material.EXPERIENCE_BOTTLE, amount - 64);
             player.getInventory().addItem(item);
         }
-        player.openInventory(inv);
     }
 
     @EventHandler
@@ -96,19 +101,19 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
     public void closeGUI(InventoryCloseEvent event){
         Player p = (Player) event.getPlayer();
         Inventory inv = event.getInventory();
-        if(event.getView().getTitle() == "EXPtank" ){
+        if(event.getView().getTitle() == "EXPtank" ) {
             Integer amount = 0;
-            for(int i=0; i<inv.getSize(); i++){
-                if (inv.getItem(i) != null ){
-                    if(inv.getItem(i).getType() == Material.EXPERIENCE_BOTTLE){
+            for (int i = 0; i < inv.getSize(); i++) {
+                if (inv.getItem(i) != null) {
+                    if (inv.getItem(i).getType() == Material.EXPERIENCE_BOTTLE) {
                         amount += inv.getItem(i).getAmount();
                     }
                 }
             }
-            if(amount > 0){
-                p.sendMessage(amount+"個入れました");
+            if (amount > 0) {
+                p.sendMessage(amount + "個入れました");
+                itemAmount.put(p, amount);
             }
-            itemAmount.put(p,amount);
         }
     }
 }
