@@ -1,23 +1,34 @@
 package mametaku.automendingmachine;
 
-import org.bukkit.Bukkit;
-import org.bukkit.Material;
+import jdk.nashorn.internal.ir.Block;
+import jdk.nashorn.internal.ir.CallNode;
+import org.bukkit.*;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Damageable;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.omg.IOP.CodecPackage.InvalidTypeForEncoding;
 
-import java.awt.image.ImageProducer;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Random;
 
 
 public final class AutoMendingmachine extends JavaPlugin implements Listener {
@@ -67,14 +78,10 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
             return;
         }
         player.openInventory(inv);
-        Integer amount = (Integer) itemAmount.get(player);
-        while (amount / 64 != 0){
-            if (amount < 64){
-                ItemStack item = new ItemStack(Material.EXPERIENCE_BOTTLE, amount % 64);
-                player.getInventory().addItem(item);
-            }
-            ItemStack item = new ItemStack(Material.EXPERIENCE_BOTTLE, amount - 64);
-            player.getInventory().addItem(item);
+        if (itemAmount.get(player) != null){
+            Integer amount = (Integer) itemAmount.get(player);
+            ItemStack item = new ItemStack(Material.EXPERIENCE_BOTTLE, amount);
+            inv.addItem(item);
         }
     }
 
@@ -101,18 +108,61 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
     public void closeGUI(InventoryCloseEvent event){
         Player p = (Player) event.getPlayer();
         Inventory inv = event.getInventory();
-        if(event.getView().getTitle() == "EXPtank" ) {
+        if(event.getView().getTitle().equals("EXPtank")) {
             Integer amount = 0;
             for (int i = 0; i < inv.getSize(); i++) {
                 if (inv.getItem(i) != null) {
-                    if (inv.getItem(i).getType() == Material.EXPERIENCE_BOTTLE) {
-                        amount += inv.getItem(i).getAmount();
+                    if (Objects.requireNonNull(inv.getItem(i)).getType() == Material.EXPERIENCE_BOTTLE) {
+                        amount += Objects.requireNonNull(inv.getItem(i)).getAmount();
                     }
                 }
             }
-            if (amount > 0) {
-                p.sendMessage(amount + "個入れました");
+            if (amount >= 0) {
+                if (amount > 0){
+                    p.sendMessage(amount + "個入れました");
+                }
                 itemAmount.put(p, amount);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent Player) {
+        Player p = Player.getPlayer();
+        itemAmount.putIfAbsent(Player, 0);
+    }
+
+
+    @EventHandler
+    public void AutoMending(BlockBreakEvent Player) {
+        Player p = (Player) Player.getPlayer();
+        Material name = p.getInventory().getItemInMainHand().getType();
+        Random ran = new Random();
+        int nowDurability = (int) name.getMaxDurability()-p.getInventory().getItemInMainHand().getDurability();
+        int maxDurability = (int) name.getMaxDurability();
+        Integer amount = (Integer) itemAmount.get(Player);
+        Inventory i = p.getInventory();
+        if (amount == null){
+            p.sendMessage("ugoku1");
+            if (name == Material.WOODEN_PICKAXE){
+                p.sendMessage("ugoku2");
+                if (nowDurability < maxDurability * 0.8){
+                    p.sendMessage("ugoku3");
+                    if (p.getInventory().getItemInMainHand().getEnchantments().containsKey(Enchantment.MENDING)) {
+                        p.sendMessage("ugoku4");
+                        while (nowDurability < maxDurability * 0.8 ){
+                            amount = (Integer) itemAmount.get(Player);
+                            if(amount != null  || amount != 0){
+                                p.sendMessage("ugoku5");
+                                break;
+                            }
+                            p.sendMessage("ugoku51");
+                            p.giveExp(ran.nextInt(8)+3,true);
+                            amount -= 1;
+                            itemAmount.put(p, amount);
+                        }
+                    }
+                }
             }
         }
     }
