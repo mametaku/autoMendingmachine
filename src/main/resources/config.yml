@@ -1,1 +1,6 @@
 mode: true
+commands:
+  automending:
+    description: give machine
+    usage: /<command>
+    default: op

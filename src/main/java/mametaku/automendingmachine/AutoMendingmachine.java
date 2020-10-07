@@ -3,6 +3,8 @@ package mametaku.automendingmachine;
 import jdk.nashorn.internal.ir.Block;
 import jdk.nashorn.internal.ir.CallNode;
 import org.bukkit.*;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Damageable;
@@ -25,15 +27,12 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.omg.IOP.CodecPackage.InvalidTypeForEncoding;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Random;
+import java.util.*;
 
 
 public final class AutoMendingmachine extends JavaPlugin implements Listener {
 
-    Map itemAmount = new HashMap<Player, Integer>();//GUIにいれたアイテム数をプレイヤーごとに管理する
+    Map<Player, Integer> itemAmount = new HashMap<>();//GUIにいれたアイテム数をプレイヤーごとに管理する
 
     @Override
     public void onEnable() {
@@ -44,10 +43,13 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
         // config.ymlを読み込みます。
         FileConfiguration config = getConfig();
         reloadConfig();
+
         if (config.getBoolean("mode")) {
-            getLogger().info("autoexpmachine not run.");
+            getLogger().info("automendingmachine not run.");
         }
     }
+
+
 
 
     @EventHandler
@@ -61,10 +63,11 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
             return;
         }
         if (action.equals(Action.RIGHT_CLICK_AIR) || action.equals(Action.RIGHT_CLICK_BLOCK)) {
-            if (item != null && item.getType() == Material.STICK) {
-                player.sendMessage("経験値瓶を入れてください");
-                openGUI(player);
-            }
+                    if (item.getType() == Material.IRON_NUGGET){
+                        player.sendMessage("経験値瓶を入れてください");
+                        openGUI(player);
+                    }
+
         }
     }
 
@@ -127,40 +130,29 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
     }
 
     @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent Player) {
-        Player p = Player.getPlayer();
-        itemAmount.putIfAbsent(Player, 0);
-    }
-
-
-    @EventHandler
-    public void AutoMending(BlockBreakEvent Player) {
-        Player p = (Player) Player.getPlayer();
+    public void AutoMending(BlockBreakEvent event) {
+        Player p = event.getPlayer();
         Material name = p.getInventory().getItemInMainHand().getType();
         Random ran = new Random();
-        int nowDurability = (int) name.getMaxDurability()-p.getInventory().getItemInMainHand().getDurability();
-        int maxDurability = (int) name.getMaxDurability();
-        Integer amount = (Integer) itemAmount.get(Player);
+        int nowDurability = name.getMaxDurability()-p.getInventory().getItemInMainHand().getDurability();
+        int maxDurability = name.getMaxDurability();
+        Integer amount = itemAmount.get(p);
+
+
+        if (amount == 0) return;
         Inventory i = p.getInventory();
-        if (amount == null){
-            p.sendMessage("ugoku1");
-            if (name == Material.WOODEN_PICKAXE){
-                p.sendMessage("ugoku2");
-                if (nowDurability < maxDurability * 0.8){
-                    p.sendMessage("ugoku3");
-                    if (p.getInventory().getItemInMainHand().getEnchantments().containsKey(Enchantment.MENDING)) {
-                        p.sendMessage("ugoku4");
-                        while (nowDurability < maxDurability * 0.8 ){
-                            amount = (Integer) itemAmount.get(Player);
-                            if(amount != null  || amount != 0){
-                                p.sendMessage("ugoku5");
-                                break;
-                            }
-                            p.sendMessage("ugoku51");
-                            p.giveExp(ran.nextInt(8)+3,true);
-                            amount -= 1;
-                            itemAmount.put(p, amount);
+        if (name.getMaxDurability() > 30){
+            if (nowDurability < maxDurability * 0.8){
+                if (p.getInventory().getItemInMainHand().getEnchantments().containsKey(Enchantment.MENDING)) {
+                    while (nowDurability < maxDurability * 0.8){
+                        amount = itemAmount.get(p);
+                        if(amount == 0){
+                            break;
                         }
+                        p.giveExp(ran.nextInt(8)+3,true);
+                        amount--;
+                        itemAmount.put(p, amount);
+                        nowDurability = name.getMaxDurability()-p.getInventory().getItemInMainHand().getDurability();
                     }
                 }
             }
