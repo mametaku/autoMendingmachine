@@ -42,20 +42,22 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
         Player p = (Player) sender;
 
         if (args.length == 0){
-            ItemStack item = new ItemStack(Material.IRON_HOE, 1);
+            ItemStack item = new ItemStack(Material.DIAMOND_HOE, 1);
 
             ItemMeta itemmeta = item.getItemMeta();
             itemmeta.setDisplayName("自動修繕供給装置");
             ArrayList<String> lore = new ArrayList<String>();
-            lore.add("自動的に経験値瓶を消費修繕してくれる装置。オフハンドに持つ");
+            lore.add("自動的に経験値瓶を消費修繕してくれる装置。");
+            lore.add("オフハンドに持って使う。");
             itemmeta.setLore(lore);
+            item.setItemMeta(itemmeta);
 
             p.getInventory().addItem(item);
             return true;
         }
 
-        if (!p.hasPermission("man10wiki.use")) {
-            p.sendMessage("Unknown command. Type \"/help\" for help.");
+        if (!p.hasPermission("automending.use")) {
+            p.sendMessage("あなたはまだその機能を使えません！");
             return true;
         }
         if (p.hasPermission("automending.reload")) {
@@ -88,20 +90,36 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onPlayerClicks(PlayerInteractEvent event) {
-        Player player = event.getPlayer();
+        Player p = event.getPlayer();
         Action action = event.getAction();
-        ItemStack item = event.getItem();
         FileConfiguration config = getConfig();
         if (!config.getBoolean("mode")) {
             getLogger().info("autoexpmachine is not run.");
             return;
         }
-        if (action.equals(Action.RIGHT_CLICK_AIR) || action.equals(Action.RIGHT_CLICK_BLOCK)) {
-                    if (item.getType() == Material.IRON_NUGGET){
-                        player.sendMessage("経験値瓶を入れてください");
-                        openGUI(player);
-                    }
+        ItemStack item = new ItemStack(Material.DIAMOND_HOE, 1);
 
+        ItemMeta itemmeta = item.getItemMeta();
+        itemmeta.setDisplayName("自動修繕供給装置");
+        ArrayList<String> lore = new ArrayList<String>();
+        lore.add("自動的に経験値瓶を消費修繕してくれる装置。");
+        lore.add("オフハンドに持って使う。");
+        itemmeta.setLore(lore);
+        item.setItemMeta(itemmeta);
+
+        if (action.equals(Action.RIGHT_CLICK_AIR) || action.equals(Action.RIGHT_CLICK_BLOCK)) {
+
+            if (p.getInventory().getItemInOffHand().getType() == Material.DIAMOND_HOE){
+
+                if (p.getInventory().getItemInOffHand().getItemMeta().getDisplayName().equals("自動修繕供給装置")){
+
+                    if (p.getInventory().getItemInOffHand().getItemMeta().getLore().get(0).equals("自動的に経験値瓶を消費修繕してくれる装置。")){
+
+                        p.sendMessage("経験値瓶を入れてください");
+                        openGUI(p);
+                    }
+                }
+            }
         }
     }
 
@@ -168,28 +186,59 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
         Player p = event.getPlayer();
         Material name = p.getInventory().getItemInMainHand().getType();
         Random ran = new Random();
-        int nowDurability = name.getMaxDurability()-p.getInventory().getItemInMainHand().getDurability();
+        int nowDurability = name.getMaxDurability() - p.getInventory().getItemInMainHand().getDurability();
         int maxDurability = name.getMaxDurability();
         Integer amount = itemAmount.get(p);
+        ItemStack offhand = p.getInventory().getItemInOffHand();
 
+        ItemStack item = new ItemStack(Material.DIAMOND_HOE, 1);
+
+        ItemMeta itemmeta = item.getItemMeta();
+        itemmeta.setCustomModelData(444);
+        itemmeta.setUnbreakable(true);
+        itemmeta.setDisplayName("自動修繕供給装置");
+        ArrayList<String> lore = new ArrayList<String>();
+        lore.add("自動的に経験値瓶を消費修繕してくれる装置。");
+        lore.add("オフハンドに持って使う。");
+        itemmeta.setLore(lore);
+        item.setItemMeta(itemmeta);
+
+        if (amount == null) return;
 
         if (amount == 0) return;
-        Inventory i = p.getInventory();
-        if (name.getMaxDurability() > 30){
-            if (nowDurability < maxDurability * 0.8){
-                if (p.getInventory().getItemInMainHand().getEnchantments().containsKey(Enchantment.MENDING)) {
-                    while (nowDurability < maxDurability * 0.8){
-                        amount = itemAmount.get(p);
-                        if(amount == 0){
-                            break;
-                        }
-                        p.giveExp(ran.nextInt(8)+3,true);
-                        amount--;
-                        itemAmount.put(p, amount);
-                        nowDurability = name.getMaxDurability()-p.getInventory().getItemInMainHand().getDurability();
-                    }
-                }
+
+        if (!p.hasPermission("automending.use")) return;
+
+        if (offhand == null) return;
+
+        if (p.getInventory().getItemInOffHand().getType() != Material.DIAMOND_HOE)return;
+
+        if (!(p.getInventory().getItemInOffHand().getItemMeta().getDisplayName().equals("自動修繕供給装置")))return;
+
+        if (!(p.getInventory().getItemInOffHand().getItemMeta().getLore().get(0).equals("自動的に経験値瓶を消費修繕してくれる装置。")))return;
+
+        if (!(maxDurability >= 30))return;
+
+        if (!(nowDurability < maxDurability * 0.8)) return;
+
+        if (!(p.getInventory().getItemInMainHand().getEnchantments().containsKey(Enchantment.MENDING))) return;
+
+        while (nowDurability < maxDurability * 0.8) {
+            amount = itemAmount.get(p);
+            if (amount == 0) {
+                break;
             }
+            p.giveExp(ran.nextInt(8) + 3, true);
+            amount--;
+            itemAmount.put(p, amount);
+            nowDurability = name.getMaxDurability() - p.getInventory().getItemInMainHand().getDurability();
         }
+
+
+
+
+
+
+
     }
 }
