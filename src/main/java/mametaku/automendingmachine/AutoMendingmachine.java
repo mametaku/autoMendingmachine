@@ -35,6 +35,39 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
     Map<Player, Integer> itemAmount = new HashMap<>();//GUIにいれたアイテム数をプレイヤーごとに管理する
 
     @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (!(sender instanceof Player)) {
+            return true;
+        }
+        Player p = (Player) sender;
+
+        if (args.length == 0){
+            ItemStack item = new ItemStack(Material.COMPASS, 1);
+
+            ItemMeta itemmeta = item.getItemMeta();
+            itemmeta.setDisplayName("自動修繕供給装置");
+            ArrayList<String> lore = new ArrayList<String>();
+            lore.add("自動的に経験値瓶を消費修繕してくれる装置。オフハンドに持つ");
+            itemmeta.setLore(lore);
+
+            p.getInventory().addItem(item);
+            return true;
+        }
+
+        if (!p.hasPermission("man10wiki.use")) {
+            p.sendMessage("Unknown command. Type \"/help\" for help.");
+            return true;
+        }
+        if (p.hasPermission("automending.reload")) {
+            if (args[0].equalsIgnoreCase("reload")) {
+                return true;
+            }
+            return true;
+        }
+        return true;
+    }
+
+    @Override
     public void onEnable() {
         getLogger().info("autoexpmachinerun.");
         getServer().getPluginManager().registerEvents(this, this);
@@ -43,6 +76,7 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
         // config.ymlを読み込みます。
         FileConfiguration config = getConfig();
         reloadConfig();
+        getCommand("automending").setExecutor(this);
 
         if (config.getBoolean("mode")) {
             getLogger().info("automendingmachine not run.");
