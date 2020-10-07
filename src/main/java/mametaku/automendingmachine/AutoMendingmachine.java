@@ -42,7 +42,7 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
         Player p = (Player) sender;
 
         if (args.length == 0){
-            ItemStack item = new ItemStack(Material.COMPASS, 1);
+            ItemStack item = new ItemStack(Material.IRON_HOE, 1);
 
             ItemMeta itemmeta = item.getItemMeta();
             itemmeta.setDisplayName("自動修繕供給装置");
