@@ -3,7 +3,7 @@ version: ${project.version}
 main: mametaku.automendingmachine.AutoMendingmachine
 api-version: 1.16
 commands:
-  automending:
+  amm:
     description: give machine
     usage: /<command>
     default: op

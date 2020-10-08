@@ -19,8 +19,11 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
+import sun.security.ssl.HandshakeOutStream;
 
+import javax.net.ssl.HostnameVerifier;
 import javax.print.DocFlavor;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -90,11 +93,19 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
         Player p = event.getPlayer();
         String uuid = event.getPlayer().getUniqueId().toString();
         String player = event.getPlayer().getName();
-        Integer amount = itemAmount.get(p);
-        try {
+        MySQLManager data = new MySQLManager(this,"automendingmachine");
+        if (itemAmount.get(p) != null) {
+            String amount = itemAmount.get(p).toString();
+            try {
+                data.loadConfig();
+                data.query(uuid);
+                data.query(player);
+                data.query(amount);
+                Integer amo = Integer.parseInt(amount);
+                itemAmount.put(p, amo);
+            } catch (Exception e) {
 
-        }catch (Exception e){
-
+            }
         }
     }
 
@@ -104,11 +115,17 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
         Player p = event.getPlayer();
         String uuid = event.getPlayer().getUniqueId().toString();
         String player = event.getPlayer().getName();
-        Integer amount = itemAmount.get(p);
-        try {
+        MySQLManager data = new MySQLManager(this,"plugin");
+        if (itemAmount.get(p) != null){
+            String amount = itemAmount.get(p).toString();
+            try {
+                data.loadConfig();
+                data.count(uuid);
+                data.count(player);
+                data.count(amount);
+            }catch (Exception e){
 
-        }catch (Exception e){
-
+            }
         }
     }
 
