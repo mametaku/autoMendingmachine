@@ -42,7 +42,7 @@ public class MySQLManager {
         execute("CREATE TABLE if not exists `uuid_to_amount` (\n" +
                 "  `uuid` varchar(36) DEFAULT NULL,\n" +
                 "  `player` varchar(16) DEFAULT NULL,\n" +
-                "  `amount` smallint(5) DEFAULT NULL)\n");
+                "  `amount` smallint(5) DEFAULT 0)\n");
 
 
         if(!this.connected) {

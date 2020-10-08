@@ -97,10 +97,7 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
         if (itemAmount.get(p) != null) {
             String amount = itemAmount.get(p).toString();
             try {
-                data.loadConfig();
-                data.query(uuid);
-                data.query(player);
-                data.query(amount);
+                data.query(String.format("select amount from uuid_to_amount where " + uuid + ";"));
                 Integer amo = Integer.parseInt(amount);
                 itemAmount.put(p, amo);
             } catch (Exception e) {
@@ -119,10 +116,10 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
         if (itemAmount.get(p) != null){
             String amount = itemAmount.get(p).toString();
             try {
-                data.loadConfig();
-                data.count(uuid);
-                data.count(player);
-                data.count(amount);
+                data.execute(String.format("update uuid_to_amount set"+ player +"where player=" +player +");"));
+                data.execute(String.format("update uuid_to_amount set amount = " + amount + " where uuid = " + uuid + ");"));
+                Integer amo = Integer.parseInt(amount);
+                itemAmount.put(p, amo);
             }catch (Exception e){
 
             }
@@ -234,6 +231,9 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
     @EventHandler
     public void AutoMending(BlockBreakEvent event) {
         Player p = event.getPlayer();
+
+        if (!p.hasPermission("automending.use")) return;
+
         Material name = p.getInventory().getItemInMainHand().getType();
         Random ran = new Random();
         int nowDurability = name.getMaxDurability() - p.getInventory().getItemInMainHand().getDurability();
@@ -256,8 +256,6 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
         if (amount == null) return;
 
         if (amount == 0) return;
-
-        if (!p.hasPermission("automending.use")) return;
 
         if (offhand == null) return;
 
