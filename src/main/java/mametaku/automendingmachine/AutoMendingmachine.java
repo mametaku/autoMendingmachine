@@ -21,14 +21,12 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
+import sun.security.ssl.HandshakeInStream;
 import sun.security.ssl.HandshakeOutStream;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.print.DocFlavor;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.logging.Level;
 
 import java.util.*;
@@ -95,11 +93,10 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
         String player = event.getPlayer().getName();
         MySQLManager data = new MySQLManager(this,"automendingmachine");
         if (itemAmount.get(p) != null) {
-            String amount = itemAmount.get(p).toString();
             try {
-                data.query(String.format("select amount from uuid_to_amount where " + uuid + ";"));
-                Integer amo = Integer.parseInt(amount);
-                itemAmount.put(p, amo);
+                ResultSet rs = data.query(String.format("select amount from uuid_to_amount where uuid='" + uuid + "';"));
+                Integer amount = rs.getInt("amount");
+                itemAmount.put(p,amount);
             } catch (Exception e) {
 
             }
@@ -107,22 +104,23 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
     }
 
     @EventHandler
-    public void onPlayerQuit(PlayerQuitEvent event) {
+    public void onPlayerQuit(PlayerQuitEvent event){
         // Called when a player leaves a server
         Player p = event.getPlayer();
         String uuid = event.getPlayer().getUniqueId().toString();
         String player = event.getPlayer().getName();
         MySQLManager data = new MySQLManager(this,"plugin");
-        if (itemAmount.get(p) != null){
-            String amount = itemAmount.get(p).toString();
-            try {
-                data.execute(String.format("update uuid_to_amount set"+ player +"where player=" +player +");"));
-                data.execute(String.format("update uuid_to_amount set amount = " + amount + " where uuid = " + uuid + ");"));
-                Integer amo = Integer.parseInt(amount);
-                itemAmount.put(p, amo);
-            }catch (Exception e){
-
+        if (itemAmount.get(p) == null) return;
+        String amount = itemAmount.get(p).toString();
+        ResultSet rs = data.query(String.format("select amount from uuid_to_amount where uuid='" + uuid + "';"));
+        try {
+            if (!rs.next()) {
+                data.execute(String.format("insert into uuid_to_amount values('" + uuid + "', '" + player + "', " + amount + ");"));
+            }else {
+                data.execute(String.format("update uuid_to_amount set player='"+ player +"', amount="+ amount +" where uuid='"+ uuid +"';"));
             }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
         }
     }
 
