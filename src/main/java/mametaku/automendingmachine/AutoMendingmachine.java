@@ -19,22 +19,17 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
-import sun.security.ssl.HandshakeInStream;
-import sun.security.ssl.HandshakeOutStream;
 
-import javax.net.ssl.HostnameVerifier;
-import javax.print.DocFlavor;
-import java.sql.*;
-import java.util.logging.Level;
-
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 
 
 public final class AutoMendingmachine extends JavaPlugin implements Listener {
 
     Map<Player, Integer> itemAmount = new HashMap<>();//GUIにいれたアイテム数をプレイヤーごとに管理する
+    MySQLManager data = new MySQLManager(this,"automendingmachine");
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -90,16 +85,13 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player p = event.getPlayer();
         String uuid = event.getPlayer().getUniqueId().toString();
-        String player = event.getPlayer().getName();
-        MySQLManager data = new MySQLManager(this,"automendingmachine");
-        if (itemAmount.get(p) != null) {
+        if (itemAmount.get(p) == null) return;
             try {
                 ResultSet rs = data.query(String.format("select amount from uuid_to_amount where uuid='" + uuid + "';"));
                 Integer amount = rs.getInt("amount");
                 itemAmount.put(p,amount);
             } catch (Exception e) {
 
-            }
         }
     }
 
@@ -109,7 +101,6 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
         Player p = event.getPlayer();
         String uuid = event.getPlayer().getUniqueId().toString();
         String player = event.getPlayer().getName();
-        MySQLManager data = new MySQLManager(this,"plugin");
         if (itemAmount.get(p) == null) return;
         String amount = itemAmount.get(p).toString();
         ResultSet rs = data.query(String.format("select amount from uuid_to_amount where uuid='" + uuid + "';"));
