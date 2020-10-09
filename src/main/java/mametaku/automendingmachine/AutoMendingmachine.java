@@ -43,10 +43,10 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
             ItemMeta itemmeta = item.getItemMeta();
             itemmeta.setUnbreakable(true);
             itemmeta.setCustomModelData(10);
-            itemmeta.setDisplayName("自動修繕供給装置");
+            itemmeta.setDisplayName("§d§l自動修繕供給装置");
             ArrayList<String> lore = new ArrayList<String>();
-            lore.add("自動的に経験値瓶を消費修繕してくれる装置。");
-            lore.add("オフハンドに持って使う。");
+            lore.add("§f§l自動的に経験値瓶を消費修繕してくれる装置。");
+            lore.add("§f§lオフハンドに持って右クリックで装置を開く。");
             itemmeta.setLore(lore);
             item.setItemMeta(itemmeta);
 
@@ -55,7 +55,7 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
         }
 
         if (!p.hasPermission("automending.use")) {
-            p.sendMessage("あなたはまだその機能を使えません！");
+            p.sendMessage("§3§l[§a§lAutoMendingMachine§3§l]§f§lあなたはまだその機能を使えません！");
             return true;
         }
         if (p.hasPermission("automending.reload")) {
@@ -69,7 +69,7 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
-        getLogger().info("autoexpmachinerun.");
+        getLogger().info("automendingmachine is run.");
         getServer().getPluginManager().registerEvents(this, this);
         // config.ymlが存在しない場合はファイルに出力します。
         saveDefaultConfig();
@@ -77,17 +77,17 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
         FileConfiguration config = getConfig();
         reloadConfig();
         getCommand("amm").setExecutor(this);
-        if (config.getBoolean("mode")) {
-            getLogger().info("automendingmachine not run.");
+        if (!config.getBoolean("mode")) {
+            getLogger().info("automendingmachine is not run.");
         }
     }
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player p = event.getPlayer();
         String uuid = event.getPlayer().getUniqueId().toString();
-        if (itemAmount.get(p) == null) return;
             try {
                 ResultSet rs = data.query(String.format("select amount from uuid_to_amount where uuid='" + uuid + "';"));
+                rs.next();
                 Integer amount = rs.getInt("amount");
                 itemAmount.put(p,amount);
             } catch (Exception e) {
@@ -97,7 +97,6 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event){
-        // Called when a player leaves a server
         Player p = event.getPlayer();
         String uuid = event.getPlayer().getUniqueId().toString();
         String player = event.getPlayer().getName();
@@ -132,10 +131,10 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
         ItemMeta itemmeta = item.getItemMeta();
         itemmeta.setUnbreakable(true);
         itemmeta.setCustomModelData(10);
-        itemmeta.setDisplayName("自動修繕供給装置");
+        itemmeta.setDisplayName("§d§l自動修繕供給装置");
         ArrayList<String> lore = new ArrayList<String>();
-        lore.add("自動的に経験値瓶を消費修繕してくれる装置。");
-        lore.add("オフハンドに持って使う。");
+        lore.add("§f§l自動的に経験値瓶を消費修繕してくれる装置。");
+        lore.add("§f§lオフハンドに持って右クリックで装置を開く。");
         itemmeta.setLore(lore);
         item.setItemMeta(itemmeta);
 
@@ -145,11 +144,10 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
 
                 if (p.getInventory().getItemInOffHand().getType() == Material.DIAMOND_HOE){
 
-                    if (p.getInventory().getItemInOffHand().getItemMeta().getDisplayName().equals("自動修繕供給装置")){
+                    if (p.getInventory().getItemInOffHand().getItemMeta().getDisplayName().equals("§d§l自動修繕供給装置")){
 
-                        if (p.getInventory().getItemInOffHand().getItemMeta().getLore().get(0).equals("自動的に経験値瓶を消費修繕してくれる装置。")){
+                        if (p.getInventory().getItemInOffHand().getItemMeta().getLore().get(0).equals("§f§l自動的に経験値瓶を消費修繕してくれる装置。")){
 
-                            p.sendMessage("経験値瓶を入れてください");
                             openGUI(p);
                         }
                     }
@@ -161,7 +159,7 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
 
     //GUIを開かせる
     public void openGUI(Player player) {
-        Inventory inv = Bukkit.createInventory(null, 9, "EXPtank");
+        Inventory inv = Bukkit.createInventory(null, 27, "§l[EXPtank]§f§l経験値瓶を入れてください");
         FileConfiguration config = getConfig();
         if (!config.getBoolean("mode")) {
             getLogger().info("autoexpmachine not run.");
@@ -186,9 +184,9 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
             return;
         }
         if (event.getCurrentItem() == null || event.getCurrentItem().getType() != Material.EXPERIENCE_BOTTLE) {
-            if ("EXPtank".equals(q)) {
+            if ("§l[EXPtank]§f§l経験値瓶を入れてください".equals(q)) {
                 if (event.getCurrentItem() != null){
-                    p.sendMessage("入れられるのは経験値瓶のみです！");
+                    p.sendMessage("§3§l[§a§lAutoMendingMachine§3§l]§f§l入れられるのは経験値瓶のみです！");
                     event.setCancelled(true);
                 }
             }
@@ -199,7 +197,7 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
     public void closeGUI(InventoryCloseEvent event){
         Player p = (Player) event.getPlayer();
         Inventory inv = event.getInventory();
-        if(event.getView().getTitle().equals("EXPtank")) {
+        if(event.getView().getTitle().equals("§l[EXPtank]§f§l経験値瓶を入れてください")){
             Integer amount = 0;
             for (int i = 0; i < inv.getSize(); i++) {
                 if (inv.getItem(i) != null) {
@@ -209,9 +207,6 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
                 }
             }
             if (amount >= 0) {
-                if (amount > 0){
-                    p.sendMessage(amount + "個入れました");
-                }
                 itemAmount.put(p, amount);
             }
         }
@@ -235,10 +230,10 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
         ItemMeta itemmeta = item.getItemMeta();
         itemmeta.setUnbreakable(true);
         itemmeta.setCustomModelData(10);
-        itemmeta.setDisplayName("自動修繕供給装置");
+        itemmeta.setDisplayName("§d§l自動修繕供給装置");
         ArrayList<String> lore = new ArrayList<String>();
-        lore.add("自動的に経験値瓶を消費修繕してくれる装置。");
-        lore.add("オフハンドに持って使う。");
+        lore.add("§f§l自動的に経験値瓶を消費修繕してくれる装置。");
+        lore.add("§f§lオフハンドに持って右クリックで装置を開く。");
         itemmeta.setLore(lore);
         item.setItemMeta(itemmeta);
 
@@ -250,17 +245,17 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
 
         if (offhand.getType() != Material.DIAMOND_HOE)return;
 
-        if (!(offhand.getItemMeta().getDisplayName().equals("自動修繕供給装置")))return;
+        if (!(offhand.getItemMeta().getDisplayName().equals("§d§l自動修繕供給装置")))return;
 
-        if (!(offhand.getItemMeta().getLore().get(0).equals("自動的に経験値瓶を消費修繕してくれる装置。")))return;
+        if (!(offhand.getItemMeta().getLore().get(0).equals("§f§l自動的に経験値瓶を消費修繕してくれる装置。")))return;
 
         if (!(maxDurability >= 30))return;
 
-        if (!(nowDurability < maxDurability * 0.8)) return;
+        if (!(nowDurability < maxDurability * 0.7)) return;
 
         if (!(p.getInventory().getItemInMainHand().getEnchantments().containsKey(Enchantment.MENDING))) return;
 
-        while (nowDurability < maxDurability * 0.8) {
+        while (nowDurability < maxDurability * 0.7) {
             amount = itemAmount.get(p);
             if (amount == 0) {
                 break;
