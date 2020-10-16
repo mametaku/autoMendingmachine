@@ -13,6 +13,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.player.PlayerEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -36,8 +37,12 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
         if (!(sender instanceof Player)) {
             return true;
         }
-        Player p = (Player) sender;
 
+        Player p = (Player) sender;
+        if (!p.hasPermission("automending.use")) {
+            p.sendMessage("§3§l[§a§lAutoMendingMachine§3§l]§f§lあなたはまだその機能を使えません！");
+            return true;
+        }
         if (args.length == 0){
             ItemStack item = new ItemStack(Material.DIAMOND_HOE, 1);
             ItemMeta itemmeta = item.getItemMeta();
@@ -51,11 +56,6 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
             item.setItemMeta(itemmeta);
 
             p.getInventory().addItem(item);
-            return true;
-        }
-
-        if (!p.hasPermission("automending.use")) {
-            p.sendMessage("§3§l[§a§lAutoMendingMachine§3§l]§f§lあなたはまだその機能を使えません！");
             return true;
         }
         if (p.hasPermission("automending.reload")) {
@@ -83,20 +83,42 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
     }
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        Player p = event.getPlayer();
-        String uuid = event.getPlayer().getUniqueId().toString();
+        Bukkit.getScheduler().runTaskAsynchronously(this, (  ) -> {
             try {
-                ResultSet rs = data.query(String.format("select amount from uuid_to_amount where uuid='" + uuid + "';"));
-                rs.next();
-                Integer amount = rs.getInt("amount");
-                itemAmount.put(p,amount);
+                setData((PlayerEvent) event);
             } catch (Exception e) {
-
-        }
+                Bukkit.getLogger().info(e.getMessage());
+                System.out.println(e.getMessage());
+            }
+        });
     }
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event){
+        Bukkit.getScheduler().runTaskAsynchronously(this, (  ) -> {
+            try {
+                getData((PlayerEvent) event);
+            } catch (Exception e) {
+                Bukkit.getLogger().info(e.getMessage());
+                System.out.println(e.getMessage());
+            }
+        });
+    }
+
+    public void  setData(PlayerEvent event){
+        Player p = event.getPlayer();
+        String uuid = event.getPlayer().getUniqueId().toString();
+        try {
+            ResultSet rs = data.query(String.format("select amount from uuid_to_amount where uuid='" + uuid + "';"));
+            rs.next();
+            Integer amount = rs.getInt("amount");
+            itemAmount.put(p,amount);
+        } catch (Exception e) {
+
+        }
+    }
+
+    public void getData(PlayerEvent event){
         Player p = event.getPlayer();
         String uuid = event.getPlayer().getUniqueId().toString();
         String player = event.getPlayer().getName();
@@ -113,9 +135,6 @@ public final class AutoMendingmachine extends JavaPlugin implements Listener {
             throwables.printStackTrace();
         }
     }
-
-
-
 
     @EventHandler
     public void onPlayerClicks(PlayerInteractEvent event) {
